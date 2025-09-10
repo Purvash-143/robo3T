@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  robo3t-vulnerable:
+    build: .
+    image: robo3t-vulnerable:latest
+    container_name: robo3t-demo
+    # Since this is for vulnerability scanning demo, not for running GUI
+    # We'll just show the installation info and exit
+    command: ["/entrypoint.sh"]
