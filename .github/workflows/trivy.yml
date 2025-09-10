@@ -1,11 +1,6 @@
 name: Trivy Scan
 on:
   workflow_dispatch:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-
 jobs:
   Trivy-Scan:
     runs-on: ubuntu-latest
@@ -14,18 +9,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Build Docker image
-        run: docker build -t robo3t-vulnerable:latest .
-
-      - name: Run Trivy vulnerability scanner on built image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'robo3t-vulnerable:latest'
-          format: 'table'
-          severity: 'HIGH,CRITICAL'
-          output: 'trivy-robo3t-results.txt'
-
       - name: Run Trivy vulnerability scanner (Filesystem)
         uses: aquasecurity/trivy-action@master
         with:
@@ -33,61 +16,11 @@ jobs:
           ignore-unfixed: true
           format: 'table'
           severity: 'HIGH,CRITICAL'
-          output: 'trivy-filesystem-results.txt'
-    
-      - name: Run Trivy on Keycloak
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'quay.io/keycloak/keycloak:24.0.2'
-          format: 'table'
-          severity: 'HIGH,CRITICAL'
-          output: 'trivy-keycloak.txt'
-
-      - name: Run Trivy on nifi
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'apache/nifi:1.25.0'
-          format: 'table'
-          severity: 'HIGH,CRITICAL'
-          output: 'trivy-nifi.txt'
-
-      - name: Run Trivy on istio
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'istio/proxyv2:1.21.0'
-          format: 'table'
-          severity: 'HIGH,CRITICAL'
-          output: 'trivy-istio.txt'
+          output: 'trivy-results.txt'
 
       - name: Show Trivy results in summary
         run: |
           echo "## 🔍 Trivy Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Robo 3T Container Vulnerabilities" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          cat trivy-robo3t-results.txt >> $GITHUB_STEP_SUMMARY
+          cat trivy-results.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Filesystem Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat trivy-filesystem-results.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### External Image Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat trivy-keycloak.txt >> $GITHUB_STEP_SUMMARY
-          cat trivy-nifi.txt >> $GITHUB_STEP_SUMMARY
-          cat trivy-istio.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload Trivy scan results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: trivy-scan-results
-          path: |
-            trivy-robo3t-results.txt
-            trivy-filesystem-results.txt
-            trivy-keycloak.txt
-            trivy-nifi.txt
-            trivy-istio.txt
